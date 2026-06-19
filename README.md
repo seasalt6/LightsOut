@@ -1,82 +1,159 @@
-**Game: Lightsout**
+<div align="center">
 
-**Demo video :** https://youtu.be/7oOvwAudPyg?feature=shared
+# Lights Out
 
-**Description:**
+Terminal-based strategic puzzle game written in modern C++.
 
-LightsOut is a puzzle game where the objective is to turn off (or on) all the lights on a grid. 
+[![C++](https://img.shields.io/badge/C%2B%2B-11-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)](https://isocpp.org/)
+[![Build](https://img.shields.io/badge/build-Makefile-2E7D32?style=for-the-badge)](Makefile)
+[![Interface](https://img.shields.io/badge/interface-terminal-111827?style=for-the-badge)](#terminal-interface)
+[![Game](https://img.shields.io/badge/game-Lights%20Out-7C3AED?style=for-the-badge)](#gameplay-model)
 
-Each time a player toggles a light, its adjacent lights (the left one, the right one, the upper one, and the lower one) also change their state. 
+[Demo Video](https://youtu.be/7oOvwAudPyg?feature=shared) · [Build Instructions](#build-and-run) · [Gameplay Modes](#game-modes)
 
-The goal of the game is to turn off all the lights on a grid. 
+</div>
 
+---
 
-**Game Rules:**
+## Overview
 
-•	The game offers three different modes.
+**Lights Out** is a command-line implementation of the classic grid-toggle puzzle. The player is given a board of illuminated and non-illuminated cells. Selecting one cell flips that cell and its four orthogonal neighbors. The objective is to drive the entire board into the solved state with every light turned off.
 
-Mode 1: The game starts with a board size of 3 x 3. After completing the 3 x 3 Lights Out game, the board size progressively increases to 4 x 4, 5 x 5, and so on, gradually reaching 20 x 20.
+This version expands the original puzzle into a multi-mode terminal game with progressive levels, custom board dimensions, randomized challenge generation, move tracking, terminal color rendering, and a story-driven opening sequence.
 
-Mode 2: The board size is customized by entering the desired dimensions (3 - 20).
+## Gameplay Model
 
-Mode 3: The board size is randomly generated, and players have a limited number of moves to solve.
+Each board state is represented as a two-dimensional grid:
 
-•	The number of steps taken by the player to solve the game is recorded. 
+- `X` means the light is on.
+- `O` means the light is off.
+- Selecting a coordinate toggles the selected cell.
+- The same action also toggles the upper, lower, left, and right neighbors when they exist.
+- A puzzle is solved when no `X` cells remain.
 
-•	Choose your preferred mode, strategize your moves, and aim for the minimum number of steps to conquer the LightsOut game.
+```text
+Before selecting center        After selecting center
 
-•  Input "q q" to leave the game
+O X O                          O O O
+X X X        toggle (2,2)      O O O
+O X O                          O O O
+```
 
-**Features Implemented:**
+## Game Modes
 
-1.	Generation of random game sets or events:
+| Mode | Name | Board Strategy | Challenge Profile |
+| --- | --- | --- | --- |
+| `1` | Progressive Campaign | Starts from `3 x 3` and grows up to `20 x 20` | Long-form difficulty curve with level progression |
+| `2` | Custom Board | Player chooses a size from `3` to `20` | Controlled practice and experimentation |
+| `3` | Random Challenge | Board size is generated randomly | Limited-move puzzle with higher uncertainty |
 
-•	Random board size
+## Feature Matrix
 
-•	Random lights on / off at the start of the game
+| Capability | Implementation |
+| --- | --- |
+| Randomized board initialization | Uses pseudo-random coordinate toggles to generate solvable-looking puzzle states |
+| Dynamic board dimensions | Supports square boards from `3 x 3` to `20 x 20` |
+| Terminal visualization | Renders row/column indices with ANSI-colored `X` and `O` symbols |
+| Input validation | Rejects invalid game modes and out-of-range board sizes |
+| Move accounting | Counts player actions during the solving loop |
+| Progressive mode | Reuses the core engine across increasing board sizes |
+| Limited-move mode | Applies a move cap for randomized challenges |
+| Story prologue | Reads `story.txt` through file I/O before gameplay starts |
+| Modular codebase | Separates core rules, Mode 1 flow, Mode 3 logic, and application entry point |
 
-2.	Data structures for storing game status
+## Architecture
 
-•	Arrays are used throughout the program to store and manipulate data: game games, board size, and user inputs.
+```mermaid
+flowchart TD
+    A[main.cpp] --> B[opening sequence]
+    A --> C[mode selection]
+    C --> D[Mode 1: progressive campaign]
+    C --> E[Mode 2: custom board]
+    C --> F[Mode 3: random challenge]
+    D --> G[LightsOut core engine]
+    E --> G
+    F --> G
+    F --> H[LightsOutGame helper]
+    G --> I[board generation]
+    G --> J[cell and neighbor toggling]
+    G --> K[terminal board renderer]
+    G --> L[solved-state detection]
+```
 
-•	The vector<vector<bool>> data structure is used to represent the board. 
+### Core Components
 
-•	The 2D vector data structure is used to store and manipulate the game board's status and the state of each cell.
+| File | Responsibility |
+| --- | --- |
+| `main.cpp` | Program entry point, story loading, mode selection, and top-level game flow |
+| `core.h` | Main `LightsOut` engine: board state, rendering, toggling, validation loop, and win detection |
+| `mode1.h` | Progressive campaign controller from `3 x 3` through `20 x 20` |
+| `mode3.h` | Random challenge interface and helper declarations |
+| `mode3.cpp` | Random board size generation and breadth-first search helper implementation |
+| `story.txt` | Narrative opening content loaded at runtime |
+| `Makefile` | Reproducible local build commands |
 
-3.	Dynamic memory management
+## Technical Notes
 
-•	std::vector is used to store and manage the directions vector.
+- The board is stored as `vector<vector<bool>>`, giving the game a compact, dynamically sized state model.
+- Neighbor propagation is centralized in `change_cell`, so every mode shares the same rule implementation.
+- The display layer adapts spacing for single-digit and double-digit board indices.
+- Mode 3 includes a `LightsOutGame::calculateSteps` breadth-first search helper for state-space exploration.
+- The game uses `<unistd.h>` for the timed story opening through `sleep()`, which is available on Linux and macOS.
 
-•	The calculateSteps function assigns the grid variable to a copy of the initial grid, and makes modifications during the breadth-first search.
+## Terminal Interface
 
-4.	File input/output
+During gameplay, enter a row and column to toggle a cell:
 
-•	The ifstream object, fin,  is used to open the file "story.txt". 
-It reads the contents of the file line by line using getline.  
-The fin.close() statement is used to close the file.
+```text
+Enter the row and column of the X/O to change it: 2 3
+```
 
-5.	Program codes in multiple files
+To leave a running game, enter `q` for either coordinate:
 
-•	The file core.h contains the core logic and functions for the game.
+```text
+q q
+```
 
-•	The file mode1.h and mode3.h handles the execution of mode 1 and mode 3 respectively.
+## Build And Run
 
-•	Each of these files is included in the main program file (main.cpp)
+### Requirements
 
+- `g++` with C++11 support
+- `make`
+- Linux or macOS terminal recommended for ANSI colors and `<unistd.h>`
 
-Non-standard C/C++ libraries: 
+### Compile
 
-<unistd.h>: The sleep() function creates a delay of 2 seconds between each line displayed.
+```bash
+make
+```
 
+### Play
 
-**Compilation and execution instructions:**
+```bash
+./program
+```
 
-To compile and execute the game, 
+### Clean Build Artifacts
 
-1.	Download the ZIP containing the files.
-   
-2.	Open a terminal and navigate to the directory where the code files are saved.
-   
-3.	Compile the code using a C++ compiler. Run the command ‘make’.
-   
-4.	Run the command './program’ to play the game.
+```bash
+make clean
+```
+
+## Repository Layout
+
+```text
+.
+├── Makefile
+├── README.md
+├── core.h
+├── main.cpp
+├── mode1.h
+├── mode3.cpp
+├── mode3.h
+└── story.txt
+```
+
+## Project Scope
+
+The project demonstrates a complete terminal game loop with randomized state generation, modular C++ organization, dynamic data structures, file input, ANSI rendering, and multiple gameplay modes built on a shared puzzle engine.
