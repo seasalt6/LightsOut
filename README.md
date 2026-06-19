@@ -1,19 +1,5 @@
 **Game: Lightsout**
 
-Group 168
-
-Team Members: 
-
-•	He Zhiyue
-
-•	Hsieh Tsz Hin
-
-•	Huang Yu Tung
-
-•	Hui Shuk Ying
-
-•	Kong Yu Yuet
-
 **Demo video :** https://youtu.be/7oOvwAudPyg?feature=shared
 
 **Description:**
